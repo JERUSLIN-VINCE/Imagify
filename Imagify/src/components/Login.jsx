@@ -60,15 +60,25 @@ const Login = () => {
             <h1 className='text-2xl text-center text-neutral-700 
             font-medium'>{state}</h1>
             <p className='text-sm'>Welcome back! please sign in to continue</p>
-           {state!='Login' && < div className='border px-6 py-2 flex
-            items-center gap-2 rounded-full mt-4'>
-            <img src={assets.user_icon} alt="" />
-            <input onChange={e=> setName(e.target.value)}  value={name} className='outline-none text-sm' type="text" placeholder='Full name' required />
-            </div>}
-            <div className='border px-6 py-2 flex 
+           {state !== 'Login' && (
+  <div className='border px-6 py-2 flex items-center gap-2 rounded-full mt-4'>
+    <img src={assets.user_icon} className="w-5 h-5" alt="" />
+
+    <input
+      onChange={e => setName(e.target.value)}
+      value={name}
+      className='outline-none text-sm w-full'
+      type="text"
+      placeholder='Full name'
+      required
+    />
+  </div>
+)}
+
+            <div className='border px-6 py-2 flex
             items-center gap-2 rounded-full mt-4'>
             <img src={assets.email_icon} alt="" />
-            <input onChange={e=> setEmail(e.target.value)}  value={email} className='outline-none text-sm' type="email" placeholder='Email id' required />
+            <input onChange={e=> setEmail(e.target.value)}  value={email} className='outline-none text-sm w-full' type="email" placeholder='Email id' required />
             </div>
             <div className='border px-6 py-2 flex
             items-center gap-2 rounded-full mt-4'>
