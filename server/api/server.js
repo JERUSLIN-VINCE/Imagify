@@ -1,34 +1,53 @@
 import express from 'express';
-import cors from 'cors';
 import 'dotenv/config';
-import serverless from 'serverless-http';
-import connectDB from './config/mongodb.js';
-import userRouter from './routes/userRouter.js';
-import imageRouter from './routes/imageRoutes.js';
+import connectDB from '../config/mongodb.js';
+import userRouter from '../routes/userRouter.js';
+import imageRouter from '../routes/imageRoutes.js';
 
-let app;
+const app = express();
 
-const initializeApp = async () => {
-  if (!app) {
-    app = express();
-    app.use(express.json());
-    const allowedOrigins = process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : ['http://localhost:5173', 'http://localhost:3000', 'https://imagify-nine-gules.vercel.app', 'https://imagify-h4m4zydd0-jeruslin-vinces-projects.vercel.app'];
-    app.use(cors({
-      origin: allowedOrigins,
-      credentials: true
-    }));
-    await connectDB();
-    app.use('/api/users', userRouter);
-    app.use('/api/image', imageRouter);
-    app.get('/', (req, res) => {
-        res.send("API Working fine")
-    });
+// Allowed origins
+const allowedOrigins = [
+  'https://imagify-nine-gules.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
+// Custom CORS middleware that works with Vercel serverless
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  // Check if origin is allowed
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
   }
-  return app;
-};
+  
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, token');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  
+  next();
+});
 
-export default async (req, res) => {
-  const app = await initializeApp();
-  const handler = serverless(app);
-  return handler(req, res);
-};
+app.use(express.json());
+
+// Connect to MongoDB
+connectDB();
+
+// Routes
+app.use('/api/users', userRouter);
+app.use('/api/image', imageRouter);
+
+// Root route
+app.get('/', (req, res) => {
+  res.send("API Working fine")
+});
+
+export default app;
