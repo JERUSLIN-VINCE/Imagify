@@ -1,24 +1,23 @@
 import userModel from "../models/userModel.js";
 import FormData from "form-data";
 import axios from "axios";
+
 export const generateImage = async (req, res) => {
   try {
-    let { prompt } = req.body;
+    const { prompt } = req.body;
     const userId = req.userId;
-    if (typeof prompt === 'string') {
-      prompt = prompt.trim();
-    }
+
     if (!userId || !prompt) {
-      return res.json({ success: false, message: "Missing Details" });
+      return res.status(400).json({ success: false, message: "Missing required details" });
     }
 
     const user = await userModel.findById(userId);
     if (!user) {
-      return res.json({ success: false, message: "User not found" });
+      return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    if (user.creditBalance === 0 || user.creditBalance < 0) {
-      return res.json({ success: false, message: "Insufficient Credits", creditBalance: user.creditBalance });
+    if (user.creditBalance <= 0) {
+      return res.status(400).json({ success: false, message: "Insufficient credits", creditBalance: 0 });
     }
 
     const formData = new FormData();
@@ -43,9 +42,27 @@ export const generateImage = async (req, res) => {
       creditBalance: user.creditBalance - 1,
     }, { new: true });
 
-    res.json({ success: true, message: "Image generated successfully", creditBalance: updatedUser.creditBalance, resultImage });
+    res.json({ 
+      success: true, 
+      message: "Image generated successfully", 
+      creditBalance: updatedUser.creditBalance, 
+      resultImage 
+    });
   } catch (error) {
-    console.log(error.message);
-    res.json({ success: false, message: error.message });
+    console.log("Error generating image:", error.message);
+    console.log("Error details:", error.response?.data || error);
+    
+    // Provide more specific error messages
+    if (error.response?.status === 401) {
+      return res.status(401).json({ success: false, message: "Invalid API key. Please contact the administrator." });
+    }
+    if (error.response?.status === 429) {
+      return res.status(429).json({ success: false, message: "Rate limit exceeded. Please try again later." });
+    }
+    if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+      return res.status(503).json({ success: false, message: "Image generation service is unavailable." });
+    }
+    
+    res.status(500).json({ success: false, message: "Failed to generate image. Please try again." });
   }
 };
