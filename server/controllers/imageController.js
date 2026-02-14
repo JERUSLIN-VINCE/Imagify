@@ -20,6 +20,11 @@ export const generateImage = async (req, res) => {
       return res.status(400).json({ success: false, message: "Insufficient credits", creditBalance: 0 });
     }
 
+    // Check if API key is configured
+    if (!process.env.CLIPDROP_API) {
+      return res.status(500).json({ success: false, message: "Image generation API key not configured. Please contact the administrator." });
+    }
+
     const formData = new FormData();
     formData.append('prompt', prompt);
 
