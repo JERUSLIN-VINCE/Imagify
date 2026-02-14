@@ -2,6 +2,9 @@ import mongoose from "mongoose";
 import 'dotenv/config';
 
 const connectDB = async () => {
+    console.log("MONGODB_URI present:", !!process.env.MONGODB_URI);
+    console.log("MONGODB_URI value:", process.env.MONGODB_URI ? "set (length: " + process.env.MONGODB_URI.length + ")" : "not set");
+    
     try {
         const conn = await mongoose.connect(process.env.MONGODB_URI, {
             maxPoolSize: 10,

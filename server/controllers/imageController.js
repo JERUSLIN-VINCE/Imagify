@@ -21,6 +21,9 @@ export const generateImage = async (req, res) => {
     }
 
     // Check if API key is configured
+    console.log("CLIPDROP_API present:", !!process.env.CLIPDROP_API);
+    console.log("CLIPDROP_API value:", process.env.CLIPDROP_API ? "set (length: " + process.env.CLIPDROP_API.length + ")" : "not set");
+    
     if (!process.env.CLIPDROP_API) {
       return res.status(500).json({ success: false, message: "Image generation API key not configured. Please contact the administrator." });
     }
