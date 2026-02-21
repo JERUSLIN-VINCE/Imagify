@@ -11,7 +11,7 @@ const app = express();
 app.use(express.json());
 
 // CORS Configuration - Allow all for production (Vercel)
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
 
 app.use(cors({
   origin: isProduction ? true : ['http://localhost:5173', 'http://localhost:3000'],
