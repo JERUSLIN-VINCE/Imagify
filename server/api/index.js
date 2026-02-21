@@ -7,6 +7,9 @@ import imageRouter from '../routes/imageRoutes.js';
 
 const app = express();
 
+// Favicon handler - prevent 404 errors
+app.get('/favicon.ico', (req, res) => res.status(204));
+
 // Middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
