@@ -1,9 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
-import connectDB from './config/mongodb.js';
-import userRouter from './routes/userRouter.js';
-import imageRouter from './routes/imageRoutes.js';
+import connectDB from '../config/mongodb.js';
+import userRouter from '../routes/userRouter.js';
+import imageRouter from '../routes/imageRoutes.js';
 
 const app = express();
 
@@ -24,7 +24,6 @@ app.use(cors({
     
     // Check if origin is in allowed list
     if (allowedOrigins.indexOf(origin) === -1) {
-      // For production, you might want to be more strict
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
       return callback(new Error(msg), false);
     }
@@ -50,5 +49,4 @@ app.get('/', (req, res) => {
     res.send("API Working fine")
 });
 
-// Export for Vercel serverless
 export default app;
