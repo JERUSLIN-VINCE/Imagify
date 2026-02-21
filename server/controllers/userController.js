@@ -10,11 +10,11 @@ import jwt from "jsonwebtoken";
         // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            return res.json({success:false, message:"Invalid email format"});
+            return res.json({success:false, message:"Please enter a valid email with @ symbol"});
         }
-        // Password validation
-        if (password.length < 6) {
-            return res.json({success:false, message:"Password must be at least 6 characters long"});
+        // Password validation (must be at least 8 characters)
+        if (password.length < 8) {
+            return res.json({success:false, message:"Password must be at least 8 characters long"});
         }
         const existingUser = await userModel.findOne({email});
         if(existingUser){

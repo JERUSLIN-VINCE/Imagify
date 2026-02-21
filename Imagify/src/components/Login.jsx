@@ -16,6 +16,20 @@ const Login = () => {
     const onSubmitHandler= async (e)=>{
         e.preventDefault();
         try{
+            // Client-side validation for email (must contain @)
+            if(!email.includes('@')){
+                toast.error("Please enter a valid email with @ symbol");
+                return;
+            }
+            
+            // Client-side validation for password (minimum 8 characters during registration)
+            if(state === 'Sign Up'){
+                if(password.length < 8){
+                    toast.error("Password must be at least 8 characters long");
+                    return;
+                }
+            }
+
             if(state ==='Login'){
                const{data}=await axios.post(backendUrl+'/api/users/login',{email,password})
                 if(data.success){
