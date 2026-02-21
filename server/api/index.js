@@ -10,25 +10,11 @@ const app = express();
 // Middleware
 app.use(express.json());
 
-// CORS Configuration - Dynamic for production and development
-const allowedOrigins = [
-  process.env.FRONTEND_URL,  // Production frontend URL
-  'http://localhost:5173',    // Vite dev server
-  'http://localhost:3000'   // Alternative dev server
-].filter(Boolean);
+// CORS Configuration - Allow all for production (Vercel)
+const isProduction = process.env.NODE_ENV === 'production';
 
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (mobile apps, curl requests)
-    if (!origin) return callback(null, true);
-    
-    // Check if origin is in allowed list
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
+  origin: isProduction ? true : ['http://localhost:5173', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'token']
