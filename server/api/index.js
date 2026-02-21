@@ -28,13 +28,15 @@ let isDbConnected = false;
 const connectDB = async () => {
   if (isDbConnected || mongoose.connection.readyState === 1) {
     isDbConnected = true;
-    return;
+    return true;
   }
   
   const mongoUri = process.env.MONGODB_URI;
+  console.log("MongoDB URI exists:", !!mongoUri);
+  
   if (!mongoUri) {
-    console.error("MONGODB_URI not found");
-    return;
+    console.error("MONGODB_URI not found in environment variables");
+    return false;
   }
   
   try {
@@ -44,9 +46,11 @@ const connectDB = async () => {
     });
     isDbConnected = true;
     console.log("MongoDB connected successfully");
+    return true;
   } catch (error) {
     console.error("MongoDB connection error:", error.message);
     isDbConnected = false;
+    return false;
   }
 };
 
@@ -58,9 +62,15 @@ app.use('/api/image', imageRouter);
 app.get('/', async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
   
+  console.log("Health check called, attempting DB connection...");
+  
   try {
     if (!isDbConnected) {
-      await connectDB();
+      const connected = await connectDB();
+      if (!connected) {
+        res.status(500).send('Database connection failed');
+        return;
+      }
     }
     res.send('API Working');
   } catch (error) {
@@ -69,4 +79,5 @@ app.get('/', async (req, res) => {
   }
 });
 
+// Export the app for Vercel
 export default app;
