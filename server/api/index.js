@@ -25,21 +25,19 @@ app.use(cors({
 // Handle preflight requests
 app.options('*', cors());
 
-// Lazy MongoDB connection
+// Lazy MongoDB connection - module level variable
 let isDbConnected = false;
 
 const connectDB = async () => {
   if (isDbConnected || mongoose.connection.readyState === 1) {
     isDbConnected = true;
-    return true;
+    return { success: true, message: 'Already connected' };
   }
   
   const mongoUri = process.env.MONGODB_URI;
-  console.log("MongoDB URI exists:", !!mongoUri);
   
   if (!mongoUri) {
-    console.error("MONGODB_URI not found in environment variables");
-    return false;
+    return { success: false, message: 'MONGODB_URI not set in environment variables' };
   }
   
   try {
@@ -48,12 +46,10 @@ const connectDB = async () => {
       socketTimeoutMS: 45000,
     });
     isDbConnected = true;
-    console.log("MongoDB connected successfully");
-    return true;
+    return { success: true, message: 'Connected successfully' };
   } catch (error) {
-    console.error("MongoDB connection error:", error.message);
     isDbConnected = false;
-    return false;
+    return { success: false, message: error.message };
   }
 };
 
@@ -61,25 +57,42 @@ const connectDB = async () => {
 app.use('/api/users', userRouter);
 app.use('/api/image', imageRouter);
 
+// Debug endpoint to check environment
+app.get('/debug', (req, res) => {
+  res.json({
+    mongoUriExists: !!process.env.MONGODB_URI,
+    jwtSecretExists: !!process.env.JWT_SECRET,
+    nodeEnv: process.env.NODE_ENV,
+    vercelEnv: process.env.VERCEL_ENV,
+  });
+});
+
 // Health check endpoint with DB connection
 app.get('/', async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
   
   console.log("Health check called, attempting DB connection...");
   
-  try {
-    if (!isDbConnected) {
-      const connected = await connectDB();
-      if (!connected) {
-        res.status(500).send('Database connection failed');
-        return;
-      }
+  if (!isDbConnected) {
+    const result = await connectDB();
+    if (!result.success) {
+      console.error("DB Connection failed:", result.message);
+      res.status(500).json({ 
+        error: 'Database connection failed', 
+        details: result.message,
+        mongoUriExists: !!process.env.MONGODB_URI 
+      });
+      return;
     }
-    res.send('API Working');
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).send('Error: ' + error.message);
   }
+  
+  res.json({ message: 'API Working', database: 'Connected' });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({ error: err.message });
 });
 
 // Export the app for Vercel
