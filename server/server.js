@@ -6,54 +6,54 @@ import userRouter from './routes/userRouter.js';
 import imageRouter from './routes/imageRoutes.js';
 
 const app = express();
+const PORT = process.env.PORT || 4000;
 
 // Middleware
 app.use(express.json());
 
-// CORS Configuration - Allow all for production (Vercel)
-const isProduction = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
-
+// CORS - Allow all origins for production
 app.use(cors({
-  origin: isProduction ? true : [
-    'http://localhost:5173',
-    'http://localhost:3000'
-  ],
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'token']
 }));
 
-// Handle preflight requests
+// Handle preflight
 app.options('*', cors());
 
-// Connect to MongoDB (only once)
-let dbConnected = false;
+// DB connection flag
+let isDbConnected = false;
 
-const getDB = async () => {
-  if (!dbConnected) {
+// Connect to MongoDB
+const initDB = async () => {
+  if (!isDbConnected) {
     try {
       await connectDB();
-      dbConnected = true;
+      isDbConnected = true;
+      console.log('DB connected');
     } catch (error) {
-      console.error("DB connection error:", error);
+      console.error('DB connection error:', error);
     }
   }
 };
 
-// API Routes
+// Routes
 app.use('/api/users', userRouter);
 app.use('/api/image', imageRouter);
 
-// Health check endpoint
+// Health check
 app.get('/', async (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
   try {
-    await getDB();
-    res.send("API Working fine - " + new Date().toISOString());
+    if (!isDbConnected) {
+      await initDB();
+    }
+    res.send('API Working fine');
   } catch (error) {
-    res.status(500).send("API Error: " + error.message);
+    res.status(500).send('Error: ' + error.message);
   }
 });
 
-// For Vercel serverless - wrap everything in a handler
-const moduleExports = app;
-export default moduleExports;
+// Export for Vercel
+export default app;
