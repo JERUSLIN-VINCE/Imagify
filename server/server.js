@@ -48,7 +48,7 @@ app.use('/api/image', imageRouter);
 app.get('/', async (req, res) => {
   try {
     await getDB();
-    res.send("API Working fine");
+    res.send("API Working fine - " + new Date().toISOString());
   } catch (error) {
     res.status(500).send("API Error: " + error.message);
   }
