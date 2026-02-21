@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
-import connectDB from './config/mongodb.js';
+import mongoose from 'mongoose';
 import userRouter from './routes/userRouter.js';
 import imageRouter from './routes/imageRoutes.js';
 
@@ -10,11 +10,11 @@ const PORT = process.env.PORT || 4000;
 
 // Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// CORS - Allow all origins for production
+// CORS
 app.use(cors({
-  origin: true,
-  credentials: true,
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'token']
 }));
@@ -22,19 +22,27 @@ app.use(cors({
 // Handle preflight
 app.options('*', cors());
 
-// DB connection flag
+// MongoDB connection - lazy initialization
 let isDbConnected = false;
 
-// Connect to MongoDB
-const initDB = async () => {
-  if (!isDbConnected) {
-    try {
-      await connectDB();
-      isDbConnected = true;
-      console.log('DB connected');
-    } catch (error) {
-      console.error('DB connection error:', error);
-    }
+const connectDB = async () => {
+  if (isDbConnected) return;
+  
+  const mongoUri = process.env.MONGODB_URI;
+  if (!mongoUri) {
+    console.error("MONGODB_URI not found");
+    return;
+  }
+  
+  try {
+    await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+    });
+    isDbConnected = true;
+    console.log("MongoDB connected");
+  } catch (error) {
+    console.error("MongoDB error:", error.message);
   }
 };
 
@@ -42,14 +50,13 @@ const initDB = async () => {
 app.use('/api/users', userRouter);
 app.use('/api/image', imageRouter);
 
-// Health check
+// Root endpoint - minimal
 app.get('/', async (req, res) => {
-  res.set('Access-Control-Allow-Origin', '*');
   try {
     if (!isDbConnected) {
-      await initDB();
+      await connectDB();
     }
-    res.send('API Working fine');
+    res.send('API Working');
   } catch (error) {
     res.status(500).send('Error: ' + error.message);
   }
