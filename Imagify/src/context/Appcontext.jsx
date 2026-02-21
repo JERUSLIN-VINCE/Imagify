@@ -9,7 +9,21 @@ const AppContextProvider = (props)=>{
       const [token,setToken]=useState(localStorage.getItem('token'));
       const [credit,setCredit]=useState(0);
 
-      const backendUrl=import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
+      // Dynamic backend URL - uses env variable or derives from current location in production
+      const getBackendUrl = () => {
+        if (import.meta.env.VITE_BACKEND_URL) {
+          return import.meta.env.VITE_BACKEND_URL;
+        }
+        // In production, derive API URL from current location
+        if (window.location.hostname.includes('vercel.app')) {
+          const currentOrigin = window.location.origin;
+          // If frontend is on vercel, assume backend is also on vercel
+          return currentOrigin.replace('imagify', 'server');
+        }
+        return 'http://localhost:4000';
+      };
+      
+      const backendUrl = getBackendUrl();
       const navigate=useNavigate();
       const loadCreditData=async()=>{
         try{
